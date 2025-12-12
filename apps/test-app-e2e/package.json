@@ -1,10 +1,10 @@
 {
-  "name": "@react-settings-manager/test-app-e2e",
+  "name": "@settings-manager/test-app-e2e",
   "version": "0.0.1",
   "private": true,
   "nx": {
     "implicitDependencies": [
-      "@react-settings-manager/test-app"
+      "@settings-manager/test-app"
     ]
   }
 }

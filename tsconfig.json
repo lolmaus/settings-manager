@@ -10,7 +10,7 @@
       "path": "./apps/test-app"
     },
     {
-      "path": "./packages/react-settings-manager"
+      "path": "./packages/core"
     }
   ]
 }

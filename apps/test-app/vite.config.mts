@@ -27,7 +27,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: '@react-settings-manager/test-app',
+    name: '@settings-manager/test-app',
     watch: false,
     globals: true,
     environment: 'jsdom',

@@ -20,7 +20,7 @@ describe('App', () => {
       </BrowserRouter>
     );
     expect(
-      getAllByText(new RegExp('Welcome @react-settings-manager/test-app', 'gi'))
+      getAllByText(new RegExp('Welcome @settings-manager/test-app', 'gi'))
         .length > 0
     ).toBeTruthy();
   });

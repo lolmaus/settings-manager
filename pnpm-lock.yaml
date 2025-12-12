@@ -158,7 +158,7 @@ importers:
 
   apps/test-app-e2e: {}
 
-  packages/react-settings-manager:
+  packages/core:
     dependencies:
       tslib:
         specifier: ^2.3.0
