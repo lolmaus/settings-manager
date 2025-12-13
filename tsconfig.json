@@ -7,9 +7,6 @@
       "path": "./apps/test-app-e2e"
     },
     {
-      "path": "./apps/test-app"
-    },
-    {
       "path": "./packages/core"
     }
   ]

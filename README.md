@@ -172,7 +172,7 @@ export const apiAdapter = new AsyncSettingsAdapter({
   },
 
   onWriteError: (error) => {
-    console.error('Background save failed:', error);
+    console.error('[SettingsManager] Background save failed:', error);
     // You could trigger a toast notification here
   },
 });

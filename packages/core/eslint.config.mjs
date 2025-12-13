@@ -1,4 +1,5 @@
 import baseConfig from '../../eslint.config.mjs';
+import jsoncParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
@@ -8,16 +9,17 @@ export default [
       '@nx/dependency-checks': [
         'error',
         {
-          ignoredFiles: [
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
-            '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
+          ignoredDependencies: [
+            'jsonc-eslint-parser',
+            'happy-dom',
+            'tsdown',
+            '@nx/dependency-checks',
           ],
-          ignoredDependencies: ['vitest', 'vite', '@nx/vite'],
         },
       ],
     },
     languageOptions: {
-      parser: await import('jsonc-eslint-parser'),
+      parser: jsoncParser,
     },
   },
   {

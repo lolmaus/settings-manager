@@ -8,4 +8,4 @@ Run `nx build settings-manager` to build the library.
 
 ## Running unit tests
 
-Run `nx test settings-manager` to execute the unit tests via [Vitest](https://vitest.dev/).
+Run `nx test settings-manager` to execute the unit tests.
