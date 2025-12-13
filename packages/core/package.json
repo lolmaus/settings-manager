@@ -14,11 +14,20 @@
       "default": "./dist/index.js"
     }
   },
+  "scripts": {
+    "build": "tsdown",
+    "test": "tsx --test src/**/*.spec.ts",
+    "test:watch": "tsx --test --watch src/**/*.spec.ts"
+  },
   "files": [
     "dist",
     "!**/*.tsbuildinfo"
   ],
-  "dependencies": {
-    "tslib": "^2.3.0"
+  "dependencies": {},
+  "devDependencies": {
+    "happy-dom": "^20.0.11"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

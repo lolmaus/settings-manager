@@ -3,8 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "implicitDependencies": [
-      "@settings-manager/test-app"
-    ]
+    "implicitDependencies": []
   }
 }

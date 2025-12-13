@@ -5,16 +5,7 @@ export default [
   {
     files: ['**/*.json'],
     rules: {
-      '@nx/dependency-checks': [
-        'error',
-        {
-          ignoredFiles: [
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
-            '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
-          ],
-          ignoredDependencies: ['vitest', 'vite', '@nx/vite'],
-        },
-      ],
+      '@nx/dependency-checks': ['error'],
     },
     languageOptions: {
       parser: await import('jsonc-eslint-parser'),
