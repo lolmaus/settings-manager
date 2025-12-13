@@ -64,26 +64,11 @@ export interface AsyncAdapterOptions<TData> {
  *
  * It handles the complex logic of debouncing and race-condition management
  * so you only need to provide the raw `read` and `write` functions.
- *
- * @example
- * ```ts
- * const adapter = new AsyncAdapter({
- * read: () => fetch('/api/settings').then(r => r.json()),
- * write: (data, _, signal) => fetch('/api/settings', {
- * method: 'PUT',
- * body: JSON.stringify(data),
- * signal
- * }),
- * concurrency: 'abort'
- * });
- * ```
  */
-export class AsyncAdapter<
-  TData = unknown,
-  TError = unknown
-> extends BaseAdapter<TData, TError> {
+export class AsyncAdapter<TData = unknown> extends BaseAdapter<TData> {
   protected options: AsyncAdapterOptions<TData>;
   protected debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  protected pendingResolve: ((value: TData | void) => void) | null = null;
   protected abortController: AbortController | null = null;
   protected writeQueue: Promise<void> = Promise.resolve();
 
@@ -96,7 +81,7 @@ export class AsyncAdapter<
    * Handles errors using the custom handler from options (if present),
    * otherwise falls back to the BaseAdapter's default behavior.
    */
-  override onWriteError(error: TError): void {
+  override onWriteError(error: unknown): void {
     if (this.options.onWriteError) {
       this.options.onWriteError(error);
     } else {
@@ -119,10 +104,7 @@ export class AsyncAdapter<
    * @param settings - The full settings object.
    * @param changes - The changed properties.
    */
-  write(
-    settings: TData,
-    changes: Partial<TData>
-  ): Promise<TData | void> | void {
+  write(settings: TData, changes: Partial<TData>): Promise<TData | void> {
     const { debounceMs = 500, concurrency = 'abort' } = this.options;
 
     // Clear existing debounce timer to restart the countdown
@@ -130,16 +112,27 @@ export class AsyncAdapter<
       clearTimeout(this.debounceTimer);
     }
 
-    return new Promise((resolve, reject) => {
+    // If there is a pending promise from a previous debounce,
+    // resolve it now so it doesn't hang forever.
+    // We treat it as "superseded" (resolved with void).
+    if (this.pendingResolve) {
+      this.pendingResolve();
+      this.pendingResolve = null;
+    }
+
+    return new Promise<TData | void>((resolve, reject) => {
+      this.pendingResolve = resolve;
+
       this.debounceTimer = setTimeout(() => {
         this.executeWrite(settings, changes, concurrency)
           .then(resolve)
-          .catch((err) => {
+          .catch((err: unknown) => {
             // Ignore AbortErrors as they are intentional cancellations
             if (err instanceof Error && err.name === 'AbortError') {
+              resolve();
               return;
             }
-            this.onWriteError(err as TError);
+            this.onWriteError(err);
             reject(err);
           });
       }, debounceMs);
@@ -147,7 +140,7 @@ export class AsyncAdapter<
   }
 
   /**
-   * internal executor that applies the concurrency strategy.
+   * Internal executor that applies the concurrency strategy.
    */
   private async executeWrite(
     settings: TData,
@@ -168,16 +161,18 @@ export class AsyncAdapter<
 
     // --- Strategy 2: Queue ---
     if (strategy === 'queue') {
-      // Chain onto the existing promise
-      const operation = this.writeQueue
-        .then(() => this.options.write(settings, changes))
-        .catch(() => {
-          // Swallow errors in the chain so the queue doesn't stall,
-          // but the individual promise (returned to caller) will still reject.
-        });
+      // 1. Create a promise for the current task
+      const queuedTask = this.writeQueue.then(() => {
+        return this.options.write(settings, changes);
+      });
 
-      this.writeQueue = operation as Promise<void>;
-      return operation;
+      // 2. Attach it to the queue to ensure sequential execution.
+      // We swallow errors here strictly to protect the queue integrity;
+      // the error will still propagate to the caller via `currentTask`.
+      this.writeQueue = queuedTask.then(() => undefined).catch(() => undefined);
+
+      // 3. Return the task promise to the caller so they can await result/error
+      return queuedTask;
     }
 
     // --- Strategy 3: Optimistic ---
