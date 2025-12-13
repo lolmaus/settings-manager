@@ -1,0 +1,29 @@
+name: 'Validate PR Title'
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  main:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      # This action checks the PR title against the Conventional Commits spec
+      # Docs: https://github.com/amannn/action-semantic-pull-request
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Optional: Configure which types are allowed
+          # Default includes: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+          types: |
+            feat
+            fix
+            docs
+            chore
+          # Optional: Require a scope (e.g. feat(core): ...)
+          requireScope: false
