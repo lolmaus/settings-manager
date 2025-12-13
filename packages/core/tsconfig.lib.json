@@ -4,6 +4,8 @@
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "dist",
+    "declaration": true,
+    "declarationDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "module": "nodenext",
