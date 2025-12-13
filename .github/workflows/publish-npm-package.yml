@@ -1,0 +1,51 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - gen0
+
+permissions:
+  contents: write # To push git tags
+  id-token: write # REQUIRED for Trusted Publishing (OIDC)
+
+jobs:
+  publish:
+    # Only run if the commit message starts with "chore(release):"
+    if: startsWith(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.8.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      # 1. Tag the Commit
+      - name: Create Git Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 2. Publish to NPM (OIDC Magic)
+      - name: Publish to NPM
+        run: pnpm nx release publish
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'

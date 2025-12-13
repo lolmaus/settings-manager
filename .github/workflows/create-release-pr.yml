@@ -1,0 +1,66 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      specifier:
+        description: 'Release Type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.8.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump Version & Generate Changelog
+        run: |
+          # Updates package.json and CHANGELOG.md, but doesn't commit yet
+          pnpm nx release version ${{ inputs.specifier }} --git-commit=false --git-tag=false
+          pnpm nx release changelog ${{ inputs.specifier }} --git-commit=false --git-tag=false
+
+      - name: Create Release PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'chore(release): prepare release'
+          title: 'chore(release): publish new version'
+          body: |
+            This PR prepares the repository for a new release.
+
+            - Bumps version in `package.json`
+            - Updates `CHANGELOG.md`
+
+            **Action Required:**
+            1. Review changes.
+            2. Merge this PR to trigger the release to NPM.
+          branch: 'release/next'
+          base: 'gen0'
+          delete-branch: true
