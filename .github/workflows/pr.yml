@@ -1,9 +1,9 @@
-name: PR
+name: PR lint/build/typecheck
 
 on:
   push:
     branches:
-      - main
+      - gen0
   pull_request:
 
 permissions:
