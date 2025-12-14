@@ -69,38 +69,21 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
-          # 1. DEBUG: Check if the token is actually present
-          if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "::error::NODE_AUTH_TOKEN is empty! Check your GitHub Secrets."
-            exit 1
-          else
-            echo "NODE_AUTH_TOKEN is present (length: ${#NODE_AUTH_TOKEN} characters)."
-          fi
+          # 1. Create a clean .npmrc for the publish job
+          # We only need to set the registry mapping.
+          # WE DO NOT WRITE AN AUTH TOKEN HERE.
+          # The CLI will handle authentication via OIDC (Trusted Publishing).
 
-          # 2. CONFIG: Create a dedicated CI config file
-          # We use a separate file (.npmrc.ci) to avoid overwriting your repo's .npmrc
-          # We use $(pwd) to ensure absolute paths, which pnpm prefers.
-
-          # A. Set the registry for your specific scope
           echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc.ci
-
-          # B. Set the default registry
           echo "registry=https://registry.npmjs.org/" >> .npmrc.ci
 
-          # C. Add the AUTH token.
-          # Note: We append to the same file.
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc.ci
-
-          # 3. VERIFY: Check "whoami" using the SPECIFIC config file
-          echo "Verifying authentication..."
-          npm whoami --userconfig $(pwd)/.npmrc.ci
-
-          # 4. PUBLISH
-          # We force pnpm to use our CI specific config file
+          # 2. Publish
+          # pnpm v9+ supports provenance and should handle the OIDC exchange.
+          # We force it to use our specific config to ensure registry mapping is found.
           pnpm exec nx release publish --yes
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+          # IMPORTANT: Do NOT provide NODE_AUTH_TOKEN or NPM_TOKEN here.
+          # Trusted Publishing relies on the OIDC token exposed by the 'id-token: write' permission.
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: true
-          # CRITICAL: Point to the absolute path of the new CI config file
           NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.ci
