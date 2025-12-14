@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsdown",
     "test": "tsx --test src/**/*.test.ts",
-    "test:watch": "tsx --test --watch src/**/*.test.ts"
+    "test:watch": "tsx --test --watch src/**/*.test.ts",
+    "prepublishOnly": "pnpm run build"
   },
   "files": [
     "dist",
@@ -28,6 +29,7 @@
     "happy-dom": "^20.0.11"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   }
 }

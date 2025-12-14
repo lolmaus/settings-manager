@@ -60,9 +60,9 @@
   },
   "release": {
     "projects": ["packages/*"],
-    "projectsRelationship": "fixed",
+    "projectsRelationship": "independent",
+    "releaseTagPattern": "{projectName}@{version}",
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build",
       "git": {
         "commit": true,
         "tag": true
