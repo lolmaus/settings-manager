@@ -7,13 +7,13 @@ It solves the hard parts of settings management out of the box:
 - **Zero-Flicker Loading:** Prevents "Flash of Default Content" for async storage by offering a loading state.
 - **Race Condition Protection:** Handles concurrency (AbortController, Queueing) and debouncing automatically.
 - **Performance:** Selectors ensure components only re-render when specific settings change.
-- **Strict Typing:** Infers TypeScript types directly from your Zod history—no manual interface maintenance required.```
+- **Strict Typing:** Infers TypeScript types directly from your Zod history—no manual interface maintenance required.
 
 ⠀
 
 ## 1. Installation
 
-Install the `@lolmaus/settings-manager` package using your preferred npm-based package manager.```
+Install the `@lolmaus/settings-manager` package using your preferred npm-based package manager.
 
 ⠀
 
