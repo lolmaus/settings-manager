@@ -62,17 +62,21 @@
     "projects": ["packages/*"],
     "projectsRelationship": "fixed",
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build"
+      "preVersionCommand": "pnpm dlx nx run-many -t build",
+      "git": {
+        "commit": true,
+        "tag": true
+      }
     },
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github"
       },
-      "projectChangelogs": true
-    },
-    "git": {
-      "commit": true,
-      "tag": true
+      "projectChangelogs": true,
+      "git": {
+        "commit": true,
+        "tag": true
+      }
     }
   }
 }
