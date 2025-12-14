@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - gen0
+
+permissions:
+  contents: write # Needed for creating git tags and commits
+  id-token: write # CRITICAL: Needed for npm Trusted Publishing (OIDC)
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Generate the token from the App
+      # This token allows us to bypass the "No direct pushes" rule on gen0
+      - name: Generate Release Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_KEY }}
+
+      # 2. Checkout Repo using the App Token
+      # We must use the App Token here so subsequent git operations are authenticated as the App
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Nx to analyze commit history
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.8.0
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+          # Note: NODE_AUTH_TOKEN is NOT needed here because we use OIDC
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 3. Configure Git User to match the App
+      # This ensures the changelog commits look like they came from the bot
+      - name: Configure Git User
+        run: |
+          git config --global user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+
+      # 4. Run Nx Release
+      # --provenance: Tells npm to link this package to this CI run (verified badge)
+      # --yes: Skips interactive confirmation
+      - name: Run Nx Release
+        env:
+          # Nx uses the git CLI. Passing this token ensures git operations
+          # (like pushing tags) use the App's identity.
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: pnpm exec nx release --yes --options="--provenance"
