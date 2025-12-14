@@ -69,26 +69,38 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
-          # 1. Create a comprehensive .npmrc
-          # - Map the scope explicitly to the registry
-          # - Set the default registry
-          # - Add the auth token (crucial: NO quotation marks around the token variable here)
-          echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc
-          echo "registry=https://registry.npmjs.org/" >> .npmrc
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          # 1. DEBUG: Check if the token is actually present
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "::error::NODE_AUTH_TOKEN is empty! Check your GitHub Secrets."
+            exit 1
+          else
+            echo "NODE_AUTH_TOKEN is present (length: ${#NODE_AUTH_TOKEN} characters)."
+          fi
 
-          # 2. Debugging: Verify we are actually authenticated
-          # This prints the username associated with the token.
-          # If this fails, your token is invalid or expired.
-          echo "Verifying NPM Authentication..."
-          npm whoami --userconfig .npmrc
+          # 2. CONFIG: Create a dedicated CI config file
+          # We use a separate file (.npmrc.ci) to avoid overwriting your repo's .npmrc
+          # We use $(pwd) to ensure absolute paths, which pnpm prefers.
 
-          # 3. Run the publish command
-          # We explicitly point pnpm to use the local .npmrc we just built
+          # A. Set the registry for your specific scope
+          echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc.ci
+
+          # B. Set the default registry
+          echo "registry=https://registry.npmjs.org/" >> .npmrc.ci
+
+          # C. Add the AUTH token.
+          # Note: We append to the same file.
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc.ci
+
+          # 3. VERIFY: Check "whoami" using the SPECIFIC config file
+          echo "Verifying authentication..."
+          npm whoami --userconfig $(pwd)/.npmrc.ci
+
+          # 4. PUBLISH
+          # We force pnpm to use our CI specific config file
           pnpm exec nx release publish --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: true
-          # Force npm/pnpm to look at the file we just created in the root
-          NPM_CONFIG_USERCONFIG: ./.npmrc
+          # CRITICAL: Point to the absolute path of the new CI config file
+          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.ci
