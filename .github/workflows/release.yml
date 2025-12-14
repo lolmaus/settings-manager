@@ -69,6 +69,18 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
+          echo "Contents of .npmrc before cleanup:"
+          cat $NPM_CONFIG_USERCONFIG || true
+          # Remove any authToken lines to allow OIDC
+          sed -i '/_authToken/d' $NPM_CONFIG_USERCONFIG || true
+          echo "Contents of .npmrc after cleanup:"
+          cat $NPM_CONFIG_USERCONFIG || true
+          # Also unset the env var
+          unset NODE_AUTH_TOKEN
+
           # pnpm v9+ supports provenance and should handle the OIDC exchange.
           # https://github.com/actions/setup-node/issues/1440#issuecomment-3571890875
-          NODE_AUTH_TOKEN="" pnpm exec nx release publish --yes
+          pnpm exec nx release publish --yes
+        env:
+          # Explicitly clear NODE_AUTH_TOKEN to ensure OIDC is used
+          NODE_AUTH_TOKEN: '
