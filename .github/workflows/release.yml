@@ -83,4 +83,4 @@ jobs:
           pnpm exec nx release publish --yes
         env:
           # Explicitly clear NODE_AUTH_TOKEN to ensure OIDC is used
-          NODE_AUTH_TOKEN: '
+          NODE_AUTH_TOKEN: ''
