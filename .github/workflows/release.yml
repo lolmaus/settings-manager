@@ -39,7 +39,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -69,18 +68,18 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
-          echo "Contents of .npmrc before cleanup:"
-          cat $NPM_CONFIG_USERCONFIG || true
-          # Remove any authToken lines to allow OIDC
-          sed -i '/_authToken/d' $NPM_CONFIG_USERCONFIG || true
-          echo "Contents of .npmrc after cleanup:"
-          cat $NPM_CONFIG_USERCONFIG || true
-          # Also unset the env var
-          unset NODE_AUTH_TOKEN
+          # 1. Manually create .npmrc
+          # Since we removed 'registry-url' from setup-node, we must create this file manually.
+          echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc.ci
+          echo "registry=https://registry.npmjs.org/" >> .npmrc.ci
 
           # pnpm v9+ supports provenance and should handle the OIDC exchange.
           # https://github.com/actions/setup-node/issues/1440#issuecomment-3571890875
           pnpm exec nx release publish --yes
         env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          NPM_CONFIG_PROVENANCE: true
+          # Force npm to use our manual config
+          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.ci
           # Explicitly clear NODE_AUTH_TOKEN to ensure OIDC is used
           NODE_AUTH_TOKEN: ''
