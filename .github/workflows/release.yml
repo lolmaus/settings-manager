@@ -64,7 +64,9 @@ jobs:
 
       # 7. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
-        run: pnpm exec nx release publish --yes
+        run: |
+          pnpm config set loglevel error
+          pnpm exec nx release publish --yes
         env:
           # Token for NPM Registry
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
