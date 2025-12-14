@@ -1,4 +1,4 @@
-name: Release
+name: Automated Independent Release Pipeline
 
 on:
   push:
@@ -6,16 +6,15 @@ on:
       - gen0
 
 permissions:
-  contents: write # Needed for creating git tags and commits
-  id-token: write # CRITICAL: Needed for npm Trusted Publishing (OIDC)
+  contents: write # To push commits and tags
+  id-token: write # CRITICAL: For NPM Provenance
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
     steps:
-      # 1. Generate the token from the App
-      # This token allows us to bypass the "No direct pushes" rule on gen0
+      # 1. AUTHENTICATION: Generate the App Token
       - name: Generate Release Token
         uses: actions/create-github-app-token@v1
         id: app-token
@@ -23,44 +22,53 @@ jobs:
           app-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_KEY }}
 
-      # 2. Checkout Repo using the App Token
-      # We must use the App Token here so subsequent git operations are authenticated as the App
-      - name: Checkout Repo
+      # 2. CHECKOUT: Use the App Token for checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for Nx to analyze commit history
+          fetch-depth: 0 # Required for Nx to calculate changes
           token: ${{ steps.app-token.outputs.token }}
 
+      # 3. SETUP: Environment
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.8.0
-          run_install: false
+          version: 9.8.0 # Or your preferred version
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-          # Note: NODE_AUTH_TOKEN is NOT needed here because we use OIDC
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      # 3. Configure Git User to match the App
-      # This ensures the changelog commits look like they came from the bot
+      # 4. CONFIG: Git User (Impersonate the Bot)
       - name: Configure Git User
         run: |
           git config --global user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
           git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
 
-      # 4. Run Nx Release
-      # --provenance: Tells npm to link this package to this CI run (verified badge)
-      # --yes: Skips interactive confirmation
-      - name: Run Nx Release
+      # 5. VERSIONING: Calculate versions, update package.json, changelog, commit, & tag
+      # We skip publishing here to allow us to push to git first
+      - name: Version & Tag
+        run: pnpm exec nx release version --yes
         env:
-          # Nx uses the git CLI. Passing this token ensures git operations
-          # (like pushing tags) use the App's identity.
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: pnpm exec nx release --yes --options="--provenance"
+
+      # 6. SYNC: Push the new commit and tags to GitHub
+      # This ensures that when we publish, the tags exist on the remote
+      - name: Push Changes
+        run: git push --follow-tags origin gen0
+
+      # 7. PUBLISHING: Publish to NPM and Create GitHub Release
+      - name: Publish to NPM & GitHub
+        run: pnpm exec nx release publish --yes
+        env:
+          # Token for NPM Registry
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+          # Token for creating GitHub Releases (if configured in nx.json)
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          # Enable Provenance
+          NPM_CONFIG_PROVENANCE: true

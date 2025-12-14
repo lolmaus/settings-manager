@@ -61,22 +61,22 @@
   "release": {
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
-    "releaseTagPattern": "{projectName}@{version}",
-    "version": {
-      "git": {
-        "commit": true,
-        "tag": true
-      }
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
     },
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github"
       },
-      "projectChangelogs": true,
-      "git": {
-        "commit": true,
-        "tag": true
-      }
+      "projectChangelogs": true
+    },
+    "version": {
+      "conventionalCommits": true,
+      "updateDependents": "auto"
+    },
+    "git": {
+      "commit": true,
+      "tag": true
     }
   }
 }
