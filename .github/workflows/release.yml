@@ -80,7 +80,7 @@ jobs:
           # 2. Publish
           # pnpm v9+ supports provenance and should handle the OIDC exchange.
           # We force it to use our specific config to ensure registry mapping is found.
-          pnpm exec nx release publish --yes
+          pnpm exec nx release publish --yes --pkg-manager=npm
         env:
           # IMPORTANT: Do NOT provide NODE_AUTH_TOKEN or NPM_TOKEN here.
           # Trusted Publishing relies on the OIDC token exposed by the 'id-token: write' permission.
