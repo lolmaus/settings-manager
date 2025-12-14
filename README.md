@@ -11,6 +11,10 @@ It solves the hard parts of settings management out of the box:
 
 ⠀
 
+## 1. Roadmap
+
+⠀
+
 ## 1. Installation
 
 Install the `@lolmaus/settings-manager` package using your preferred npm-based package manager.
