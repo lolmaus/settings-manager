@@ -45,7 +45,9 @@ jobs:
         run: |
           # Updates package.json and CHANGELOG.md, but doesn't commit yet
           pnpm nx release version ${{ inputs.specifier }} --git-commit=false --git-tag=false
-          pnpm nx release changelog ${{ inputs.specifier }} --git-commit=false --git-tag=false
+          pnpm nx release changelog ${{ inputs.specifier }} --git-commit=false --git-tag=false --create-release=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release PR
         uses: peter-evans/create-pull-request@v6
