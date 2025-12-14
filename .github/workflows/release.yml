@@ -71,7 +71,7 @@ jobs:
         run: |
           # Manually append the auth token to the project's .npmrc file.
           # This ensures pnpm uses the token even if it ignores the global config.
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
 
           # Run the publish command
           pnpm exec nx release publish --yes
