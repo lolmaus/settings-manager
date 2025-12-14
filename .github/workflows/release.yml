@@ -70,4 +70,5 @@ jobs:
       - name: Publish to NPM & GitHub
         run: |
           # pnpm v9+ supports provenance and should handle the OIDC exchange.
-          pnpm exec nx release publish --yes
+          # https://github.com/actions/setup-node/issues/1440#issuecomment-3571890875
+          NODE_AUTH_TOKEN="" pnpm exec nx release publish --yes
