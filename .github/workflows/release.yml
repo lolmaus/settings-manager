@@ -33,7 +33,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.8.0 # Or your preferred version
+          version: 9.8.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,22 +51,24 @@ jobs:
           git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
 
       # 5. VERSIONING: Calculate versions, update package.json, changelog, commit, & tag
-      # It calculates versions based on conventional commits non-interactively.
       - name: Version & Tag
         run: pnpm exec nx release version
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       # 6. SYNC: Push the new commit and tags to GitHub
-      # This ensures that when we publish, the tags exist on the remote
       - name: Push Changes
         run: git push --follow-tags origin gen0
 
-      # 7. PUBLISHING: Publish to NPM and Create GitHub Release
+      # 7. BUILD: Explicitly build projects
+      # We do this AFTER versioning so artifacts have the correct version.
+      # We do this instead of 'prepublishOnly' to avoid stdout pollution.
+      - name: Build All Projects
+        run: pnpm exec nx run-many -t build
+
+      # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
-        run: |
-          pnpm config set loglevel error
-          pnpm exec nx release publish --yes
+        run: pnpm exec nx release publish --yes
         env:
           # Token for NPM Registry
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
@@ -74,3 +76,5 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           # Enable Provenance
           NPM_CONFIG_PROVENANCE: true
+          # FORCE SILENCE: Ensures pnpm outputs valid JSON only
+          NPM_CONFIG_LOGLEVEL: silent

@@ -17,8 +17,7 @@
   "scripts": {
     "build": "tsdown",
     "test": "tsx --test src/**/*.test.ts",
-    "test:watch": "tsx --test --watch src/**/*.test.ts",
-    "prepublishOnly": "pnpm run build"
+    "test:watch": "tsx --test --watch src/**/*.test.ts"
   },
   "files": [
     "dist",
