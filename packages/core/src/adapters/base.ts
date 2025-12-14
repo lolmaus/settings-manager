@@ -5,9 +5,8 @@
  * whether it be to LocalStorage, a REST API, or the file system.
  *
  * @template TData - The shape of the settings object.
- * @template TError - The type of error that might be thrown (defaults to unknown).
  */
-export abstract class BaseAdapter<TData = unknown, TError = unknown> {
+export abstract class BaseAdapter<TData = unknown> {
   /**
    * Reads settings from the storage medium.
    *
@@ -38,7 +37,7 @@ export abstract class BaseAdapter<TData = unknown, TError = unknown> {
    *
    * @param error - The error thrown during the write operation.
    */
-  onWriteError(error: TError): void {
+  onWriteError(error: unknown): void {
     console.error('[SettingsManager] Write failed:', error);
   }
 }

@@ -7,6 +7,10 @@
     "lib": ["es2022", "dom"],
     "types": ["node"]
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.spec.tsx"],
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/adapters/async.test.ts"
+  ],
   "references": [{ "path": "./tsconfig.lib.json" }]
 }
