@@ -72,11 +72,11 @@
     },
     "version": {
       "conventionalCommits": true,
-      "updateDependents": "auto"
-    },
-    "git": {
-      "commit": true,
-      "tag": true
+      "updateDependents": "auto",
+      "git": {
+        "commit": true,
+        "tag": true
+      }
     }
   }
 }
