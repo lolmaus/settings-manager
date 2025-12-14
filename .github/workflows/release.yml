@@ -69,21 +69,5 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
-          # 1. Create a clean .npmrc for the publish job
-          # We only need to set the registry mapping.
-          # WE DO NOT WRITE AN AUTH TOKEN HERE.
-          # The CLI will handle authentication via OIDC (Trusted Publishing).
-
-          echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc.ci
-          echo "registry=https://registry.npmjs.org/" >> .npmrc.ci
-
-          # 2. Publish
           # pnpm v9+ supports provenance and should handle the OIDC exchange.
-          # We force it to use our specific config to ensure registry mapping is found.
-          pnpm exec nx release publish --yes --pkg-manager=npm
-        env:
-          # IMPORTANT: Do NOT provide NODE_AUTH_TOKEN or NPM_TOKEN here.
-          # Trusted Publishing relies on the OIDC token exposed by the 'id-token: write' permission.
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          NPM_CONFIG_PROVENANCE: true
-          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc.ci
+          pnpm exec nx release publish --yes
