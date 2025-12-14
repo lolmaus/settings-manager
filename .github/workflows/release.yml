@@ -69,14 +69,26 @@ jobs:
       # 8. PUBLISHING: Publish to NPM and Create GitHub Release
       - name: Publish to NPM & GitHub
         run: |
-          # Manually append the auth token to the project's .npmrc file.
-          # This ensures pnpm uses the token even if it ignores the global config.
-          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
+          # 1. Create a comprehensive .npmrc
+          # - Map the scope explicitly to the registry
+          # - Set the default registry
+          # - Add the auth token (crucial: NO quotation marks around the token variable here)
+          echo "@settings-manager:registry=https://registry.npmjs.org/" > .npmrc
+          echo "registry=https://registry.npmjs.org/" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
 
-          # Run the publish command
+          # 2. Debugging: Verify we are actually authenticated
+          # This prints the username associated with the token.
+          # If this fails, your token is invalid or expired.
+          echo "Verifying NPM Authentication..."
+          npm whoami --userconfig .npmrc
+
+          # 3. Run the publish command
+          # We explicitly point pnpm to use the local .npmrc we just built
           pnpm exec nx release publish --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_CONFIG_PROVENANCE: true
-          NPM_CONFIG_LOGLEVEL: silent
+          # Force npm/pnpm to look at the file we just created in the root
+          NPM_CONFIG_USERCONFIG: ./.npmrc
